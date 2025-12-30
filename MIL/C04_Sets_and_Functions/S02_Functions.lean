@@ -34,66 +34,166 @@ example : s ⊆ f ⁻¹' (f '' s) := by
   use x, xs
 
 example : f '' s ⊆ v ↔ s ⊆ f ⁻¹' v := by
-  sorry
+  constructor
+  · intro h y ys
+    have : f y ∈ f '' s := by use y
+    exact h this
+  · intro h y yfs
+    obtain ⟨x, xs, rfl⟩ := yfs
+    exact h xs
+
 
 example (h : Injective f) : f ⁻¹' (f '' s) ⊆ s := by
-  sorry
+  intro x xinv
+  obtain ⟨z, zin, eq⟩ := xinv
+  have := h eq; rw [← this]; exact zin
 
 example : f '' (f ⁻¹' u) ⊆ u := by
-  sorry
+  intro x xf
+  obtain ⟨y, yin, rfl⟩ := xf
+  exact yin
 
 example (h : Surjective f) : u ⊆ f '' (f ⁻¹' u) := by
-  sorry
+  intro x xin
+  obtain ⟨y, fyeq⟩ := h x
+  use y
+  rw [← fyeq] at xin
+  exact ⟨xin, fyeq⟩
 
 example (h : s ⊆ t) : f '' s ⊆ f '' t := by
-  sorry
+  intro x xin
+  obtain ⟨y, yin, rfl⟩ := xin
+  replace yin := h yin
+  use y
 
 example (h : u ⊆ v) : f ⁻¹' u ⊆ f ⁻¹' v := by
-  sorry
+  intro x xin
+  exact h xin
 
 example : f ⁻¹' (u ∪ v) = f ⁻¹' u ∪ f ⁻¹' v := by
-  sorry
+  ext
+  rfl
 
 example : f '' (s ∩ t) ⊆ f '' s ∩ f '' t := by
-  sorry
+  intro x xin
+  obtain ⟨z, zin, fzeq⟩ := xin
+  constructor
+  use z
+  exact ⟨zin.left, fzeq⟩
+  use z
+  exact ⟨zin.right, fzeq⟩
 
 example (h : Injective f) : f '' s ∩ f '' t ⊆ f '' (s ∩ t) := by
-  sorry
+  intro x xin
+  obtain ⟨a, ain, aeq⟩ := xin.left
+  obtain ⟨b, bin, beq⟩ := xin.right
+  have : f a = f b := Eq.trans aeq beq.symm
+  replace this := h this
+  use a
+  constructor; constructor
+  exact ain
+  rw [this]; exact bin
+  exact aeq
 
 example : f '' s \ f '' t ⊆ f '' (s \ t) := by
-  sorry
+  intro x ⟨xin, xnotin⟩
+  obtain ⟨y, yin, yeq⟩ := xin
+  use y
+  constructor
+  constructor
+  exact yin
+  contrapose! xnotin
+  use y
+  exact yeq
 
 example : f ⁻¹' u \ f ⁻¹' v ⊆ f ⁻¹' (u \ v) := by
-  sorry
+  intro x ⟨xin, xnotin⟩
+  exact ⟨xin, xnotin⟩
 
 example : f '' s ∩ v = f '' (s ∩ f ⁻¹' v) := by
-  sorry
+  ext x
+  constructor
+  · intro ⟨xin, xinv⟩
+    obtain ⟨a, ain, aeq⟩ := xin
+    use a
+    constructor
+    constructor; exact ain
+    rw [← aeq] at xinv
+    exact xinv
+    exact aeq
+  intro xin
+  obtain ⟨y, yin, rfl⟩ := xin
+  constructor
+  use y
+  constructor; exact yin.left; rfl
+  exact yin.right
 
 example : f '' (s ∩ f ⁻¹' u) ⊆ f '' s ∩ u := by
-  sorry
+  intro x xin
+  obtain ⟨y, yin, rfl⟩ := xin
+  constructor
+  use y
+  constructor; exact yin.left; rfl
+  exact yin.right
 
 example : s ∩ f ⁻¹' u ⊆ f ⁻¹' (f '' s ∩ u) := by
-  sorry
+  intro x xin
+  show f x ∈ (f '' s ∩ u)
+  constructor
+  use x; constructor; exact xin.left; rfl
+  exact xin.right
 
 example : s ∪ f ⁻¹' u ⊆ f ⁻¹' (f '' s ∪ u) := by
-  sorry
+  intro x xin
+  rcases xin with h | h
+  left
+  use x
+  right
+  exact h
 
 variable {I : Type*} (A : I → Set α) (B : I → Set β)
 
 example : (f '' ⋃ i, A i) = ⋃ i, f '' A i := by
-  sorry
+  ext x; constructor
+  · intro xin
+    obtain ⟨a, h⟩ := xin
+    simp at h
+    obtain ⟨h, eq⟩ := h
+    obtain ⟨i, ain⟩ := h
+    simp
+    use i; use a
+  · intro xin
+    simp; simp at xin
+    obtain ⟨h, h1⟩ := xin
+    obtain ⟨a, ain, aeq⟩ := h1
+    use a; constructor
+    use h; exact aeq
+
 
 example : (f '' ⋂ i, A i) ⊆ ⋂ i, f '' A i := by
-  sorry
+  intro x xin
+  obtain ⟨y, yin, rfl⟩ := xin
+  simp; intro i
+  use y; constructor
+  simp at yin
+  exact yin i; rfl
 
 example (i : I) (injf : Injective f) : (⋂ i, f '' A i) ⊆ f '' ⋂ i, A i := by
-  sorry
+  intro x xin
+  simp at xin; simp
+  obtain ⟨y, yin, yeq⟩ := xin i
+  use y; constructor
+  intro i
+  obtain ⟨y0, yin0, yeq0⟩ := xin i
+  have := Eq.trans yeq yeq0.symm
+  replace this := injf this; rw [← this] at yin0
+  exact yin0; exact yeq
 
 example : (f ⁻¹' ⋃ i, B i) = ⋃ i, f ⁻¹' B i := by
-  sorry
+  ext x; simp
 
 example : (f ⁻¹' ⋂ i, B i) = ⋂ i, f ⁻¹' B i := by
-  sorry
+  ext x; simp
 
 example : InjOn f s ↔ ∀ x₁ ∈ s, ∀ x₂ ∈ s, f x₁ = f x₂ → x₁ = x₂ :=
   Iff.refl _
