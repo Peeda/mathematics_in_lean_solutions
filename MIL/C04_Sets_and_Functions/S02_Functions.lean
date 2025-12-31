@@ -223,16 +223,39 @@ example : range exp = { y | y > 0 } := by
   rw [exp_log ypos]
 
 example : InjOn sqrt { x | x ≥ 0 } := by
-  sorry
+  intro x x_nonneg y y_nonneg
+  intro sqrt_eq
+  calc
+    x = (sqrt x) ^ 2 := (sq_sqrt x_nonneg).symm
+    _ = (sqrt y) ^ 2 := by rw [sqrt_eq]
+    _ = y := sq_sqrt y_nonneg
 
 example : InjOn (fun x ↦ x ^ 2) { x : ℝ | x ≥ 0 } := by
-  sorry
+  intro x x_nonneg y y_nonneg
+  intro eq; simp at eq
+  calc
+    x = sqrt (x ^ 2) := (sqrt_sq x_nonneg).symm
+    _ = sqrt (y ^ 2) := by rw [eq]
+    _ = y := sqrt_sq y_nonneg
 
 example : sqrt '' { x | x ≥ 0 } = { y | y ≥ 0 } := by
-  sorry
+  ext x; constructor
+  intro xin
+  obtain ⟨y, yin, yeq⟩ := xin
+  simp at yin; simp
+  rw [← yeq]
+  apply sqrt_nonneg
+  intro xin
+  simp at xin; simp
+  use x ^ 2
+  exact ⟨sq_nonneg x, sqrt_sq xin⟩
 
 example : (range fun x ↦ x ^ 2) = { y : ℝ | y ≥ 0 } := by
-  sorry
+  ext x; constructor
+  simp; intro y eq
+  rw [← eq]; apply sq_nonneg
+  simp; intro x_nonneg
+  use sqrt x; apply sq_sqrt x_nonneg
 
 end
 
@@ -263,11 +286,27 @@ variable (f : α → β)
 
 open Function
 
-example : Injective f ↔ LeftInverse (inverse f) f :=
-  sorry
+example : Injective f ↔ LeftInverse (inverse f) f := by
+  constructor
+  · intro injf x
+    have h : ∃ x, f x = f x := by use x
+    have temp : f ((inverse f) (f x)) = f x := by
+      apply inverse_spec; use x
+    exact injf temp
+  · intro h a b h1
+    rw [← h a, ← h b]
+    congr
 
-example : Surjective f ↔ RightInverse (inverse f) f :=
-  sorry
+#print RightInverse
+
+example : Surjective f ↔ RightInverse (inverse f) f := by
+  constructor
+  · intro surj y
+    have := surj y
+    obtain ⟨a, eq⟩ := this
+    exact inverse_spec y (surj y)
+  · intro h y
+    use (inverse f) y; exact h y
 
 end
 
@@ -283,10 +322,8 @@ theorem Cantor : ∀ f : α → Set α, ¬Surjective f := by
     intro h'
     have : j ∉ f j := by rwa [h] at h'
     contradiction
-  have h₂ : j ∈ S
-  sorry
-  have h₃ : j ∉ S
-  sorry
+  have h₂ : j ∈ S := h₁
+  have h₃ : j ∉ S := by rw [← h]; exact h₁
   contradiction
 
 -- COMMENTS: TODO: improve this
